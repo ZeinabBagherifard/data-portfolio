@@ -125,6 +125,20 @@ section{padding:56px 0}
 .tile:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:#bfe0e1}
 .tile .shot{background:#f7fafb;padding:14px;border-bottom:1px solid var(--line)}
 .tile .shot img{border-radius:var(--r-sm);border:1px solid var(--line);cursor:zoom-in;width:100%;background:#fff}
+.slider{position:relative}
+.slider .slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;border-radius:var(--r-sm);outline-offset:3px}
+.slider .slides::-webkit-scrollbar{display:none}
+.slider .slides img{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:16/10;object-fit:contain}
+.slider .slides img:hover{transform:none}
+.slider .nav{position:absolute;top:calc(50% - 18px);transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.92);color:var(--ink);font-size:1.4rem;line-height:1;cursor:pointer;box-shadow:var(--shadow-sm);display:grid;place-items:center;padding-bottom:3px;transition:background .15s,opacity .15s}
+.slider .nav:hover{background:#fff}
+.slider .nav:disabled{opacity:.35;cursor:default}
+.slider .prev{left:22px}.slider .next{right:22px}
+.slider-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;min-height:18px}
+.slider .cap{font-size:.8rem;color:var(--muted);line-height:1.3}
+.slider .dots{display:flex;gap:6px;flex-shrink:0}
+.slider .dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer;transition:background .15s,width .15s}
+.slider .dots button[aria-current="true"]{background:var(--ink);width:18px;border-radius:4px}
 .tile .body{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1}
 .tile h3{font-family:var(--display);color:var(--ink);font-size:1.15rem;margin-bottom:6px}
 .tile p{font-size:.93rem}
@@ -358,7 +372,22 @@ footer{font-size:.9rem;color:var(--muted);padding:8px 0 32px}
     </div>
     <div class="grid">
       <div class="tile">
-        <div class="shot"><img src="img/sales-data-model.png" alt="Star schema data model in Power BI" loading="lazy"></div>
+        <div class="shot slider" aria-roledescription="carousel" aria-label="Sales Data Analysis screenshots">
+          <div class="slides" tabindex="0">
+            <img src="img/sales-data-model.png" alt="Star schema data model" loading="lazy">
+            <img src="img/sales-top-bottom-5-products.png" alt="Top and bottom 5 products" loading="lazy">
+            <img src="img/sales-Sales-Trends.png" alt="Sales trends over time" loading="lazy">
+            <img src="img/sales-profit.png" alt="Sales and profit relationship" loading="lazy">
+            <img src="img/sales-average-discount.png" alt="Average discount by promotion category" loading="lazy">
+            <img src="img/sales-net-sales-by-city.png" alt="Net sales by city" loading="lazy">
+            <img src="img/sales-total-orders.png" alt="Total number of orders" loading="lazy">
+            <img src="img/sales-period-comparison.png" alt="Two-period comparison" loading="lazy">
+            <img src="img/sales-order-table.png" alt="Order-level details with visual filters" loading="lazy">
+          </div>
+          <button class="nav prev" type="button" aria-label="Previous image">‹</button>
+          <button class="nav next" type="button" aria-label="Next image">›</button>
+          <div class="slider-foot"><span class="cap"></span><span class="dots"></span></div>
+        </div>
         <div class="body">
           <div class="tag-row"><span class="tag">Power BI</span><span class="tag">Star schema</span><span class="tag">DAX</span></div>
           <h3>Sales Data Analysis</h3>
@@ -376,7 +405,16 @@ footer{font-size:.9rem;color:var(--muted);padding:8px 0 32px}
         </div>
       </div>
       <div class="tile">
-        <div class="shot"><img src="img/upi-matrix.png" alt="UPI transactions matrix with conditional formatting" loading="lazy"></div>
+        <div class="shot slider" aria-roledescription="carousel" aria-label="UPI Transactions Analysis screenshots">
+          <div class="slides" tabindex="0">
+            <img src="img/upi-column-chart.png" alt="Amount by month, column chart" loading="lazy">
+            <img src="img/upi-line-chart.png" alt="Amount by month, line chart" loading="lazy">
+            <img src="img/upi-matrix.png" alt="Matrix by city and purpose" loading="lazy">
+          </div>
+          <button class="nav prev" type="button" aria-label="Previous image">‹</button>
+          <button class="nav next" type="button" aria-label="Next image">›</button>
+          <div class="slider-foot"><span class="cap"></span><span class="dots"></span></div>
+        </div>
         <div class="body">
           <div class="tag-row"><span class="tag">Power BI</span><span class="tag">Bookmarks</span><span class="tag">Synced slicers</span></div>
           <h3>UPI Transactions Analysis</h3>
@@ -512,6 +550,41 @@ footer{font-size:.9rem;color:var(--muted);padding:8px 0 32px}
   });
   lb.addEventListener('click', () => lb.classList.remove('open'));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('open'); });
+
+  // image sliders: arrows, dots, swipe (native scroll-snap) and arrow keys
+  document.querySelectorAll('.slider').forEach(sl => {
+    const track = sl.querySelector('.slides'), imgs = [...track.querySelectorAll('img')];
+    const prev = sl.querySelector('.prev'), next = sl.querySelector('.next');
+    const cap = sl.querySelector('.cap'), dots = sl.querySelector('.dots');
+    let i = 0;
+    const dotBtns = imgs.map((img, n) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('aria-label', `Show image ${n + 1} of ${imgs.length}`);
+      b.addEventListener('click', () => go(n)); dots.appendChild(b); return b;
+    });
+    const go = n => {
+      n = Math.max(0, Math.min(n, imgs.length - 1));
+      track.scrollTo({ left: n * track.clientWidth });
+      update(n);
+    };
+    const update = n => {
+      i = n ?? Math.round(track.scrollLeft / track.clientWidth);
+      dotBtns.forEach((b, k) => b.setAttribute('aria-current', k === i));
+      cap.textContent = `${i + 1}/${imgs.length} · ${imgs[i].alt}`;
+      prev.disabled = i === 0; next.disabled = i === imgs.length - 1;
+    };
+    prev.addEventListener('click', () => go(i - 1));
+    next.addEventListener('click', () => go(i + 1));
+    track.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); go(i + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(i - 1); }
+    });
+    // only follow the scroll position once a swipe has settled, so it doesn't fight arrow clicks
+    let settle;
+    track.addEventListener('scroll', () => { clearTimeout(settle); settle = setTimeout(() => update(), 120); }, { passive: true });
+    window.addEventListener('resize', () => go(i));
+    update();
+  });
 
   // fade sections up as they scroll into view
   const revealEls = document.querySelectorAll('.sec-head, .case, .tile, .skill, .stat, .job, .contact-card');
